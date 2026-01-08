@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import List
 
 from ollama import chat
 
@@ -12,7 +11,7 @@ class ActionItemExtractionError(Exception):
     pass
 
 
-def _extract_with_llm(text: str) -> List[str]:
+def _extract_with_llm(text: str) -> list[str]:
     prompt = f"""从以下文本中提取所有待办事项/行动项。
 返回 JSON 对象，格式为: {{"items": ["待办事项1", "待办事项2"]}}
 如果没有待办事项，返回: {{"items": []}}
@@ -32,16 +31,16 @@ def _extract_with_llm(text: str) -> List[str]:
             raise ValueError("LLM response content is None")
 
         result = json.loads(content)
-        items: List[str] = result.get("items", [])
+        items: list[str] = result.get("items", [])
         return items
     except Exception as e:
         raise ActionItemExtractionError(f"LLM 提取失败: {e}") from e
 
 
-def _deduplicate(items: List[str]) -> List[str]:
+def _deduplicate(items: list[str]) -> list[str]:
     # Deduplicate while preserving order
     seen: set[str] = set()
-    unique: List[str] = []
+    unique: list[str] = []
     for item in items:
         lowered = item.lower()
         if lowered in seen:
@@ -51,6 +50,6 @@ def _deduplicate(items: List[str]) -> List[str]:
     return unique
 
 
-def extract_action_items_llm(text: str) -> List[str]:
+def extract_action_items_llm(text: str) -> list[str]:
     items = _extract_with_llm(text)
     return _deduplicate(items)

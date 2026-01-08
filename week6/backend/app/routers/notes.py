@@ -131,5 +131,5 @@ def debug_read(path: str) -> dict[str, str]:
     try:
         content = open(path).read(1024)
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"snippet": content}

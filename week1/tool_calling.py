@@ -112,8 +112,8 @@ def extract_tool_call(text: str) -> Dict[str, Any]:
     try:
         obj = json.loads(text)
         return obj
-    except json.JSONDecodeError:
-        raise ValueError("Model did not return valid JSON for the tool call")
+    except json.JSONDecodeError as err:
+        raise ValueError("Model did not return valid JSON for the tool call") from err
 
 
 def run_model_for_tool_call(system_prompt: str) -> Dict[str, Any]:

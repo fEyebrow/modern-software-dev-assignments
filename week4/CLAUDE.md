@@ -36,7 +36,7 @@ Examples:
    ```bash
    # Interactive shell
    pre-commit install
-   
+
    # Non-interactive shell (Claude Code)
    /opt/miniconda3/bin/conda run -n cs146s pre-commit install
    ```

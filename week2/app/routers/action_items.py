@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from fastapi import APIRouter, HTTPException, status
 
 from .. import db
@@ -25,9 +23,9 @@ def extract(payload: ExtractRequest) -> ExtractResponse:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"提取服务暂时不可用: {e}",
-        )
+        ) from e
 
-    note_id: Optional[int] = None
+    note_id: int | None = None
     if payload.save_note:
         note_id = db.insert_note(payload.text)
 
@@ -38,8 +36,8 @@ def extract(payload: ExtractRequest) -> ExtractResponse:
     )
 
 
-@router.get("", response_model=List[ActionItemResponse])
-def list_all(note_id: Optional[int] = None) -> List[ActionItemResponse]:
+@router.get("", response_model=list[ActionItemResponse])
+def list_all(note_id: int | None = None) -> list[ActionItemResponse]:
     rows = db.list_action_items(note_id=note_id)
     return [
         ActionItemResponse(

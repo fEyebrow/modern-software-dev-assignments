@@ -3,7 +3,6 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -24,7 +23,7 @@ class ActionItem:
     """待办事项数据模型"""
 
     id: int
-    note_id: Optional[int]
+    note_id: int | None
     text: str
     done: bool
     created_at: str
@@ -102,7 +101,7 @@ def list_notes() -> list[Note]:
         return [_row_to_note(row) for row in rows]
 
 
-def get_note(note_id: int) -> Optional[Note]:
+def get_note(note_id: int) -> Note | None:
     with get_connection() as connection:
         cursor = connection.cursor()
         cursor.execute(
@@ -113,7 +112,7 @@ def get_note(note_id: int) -> Optional[Note]:
         return _row_to_note(row) if row else None
 
 
-def insert_action_items(items: list[str], note_id: Optional[int] = None) -> list[int]:
+def insert_action_items(items: list[str], note_id: int | None = None) -> list[int]:
     with get_connection() as connection:
         cursor = connection.cursor()
         ids: list[int] = []
@@ -130,7 +129,7 @@ def insert_action_items(items: list[str], note_id: Optional[int] = None) -> list
         return ids
 
 
-def list_action_items(note_id: Optional[int] = None) -> list[ActionItem]:
+def list_action_items(note_id: int | None = None) -> list[ActionItem]:
     with get_connection() as connection:
         cursor = connection.cursor()
         if note_id is None:
@@ -146,7 +145,7 @@ def list_action_items(note_id: Optional[int] = None) -> list[ActionItem]:
         return [_row_to_action_item(row) for row in rows]
 
 
-def get_action_item(action_item_id: int) -> Optional[ActionItem]:
+def get_action_item(action_item_id: int) -> ActionItem | None:
     with get_connection() as connection:
         cursor = connection.cursor()
         cursor.execute(
