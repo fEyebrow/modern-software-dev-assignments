@@ -4,15 +4,28 @@ async function fetchJSON(url, options) {
   return res.json();
 }
 
-async function loadNotes() {
-  const list = document.getElementById('notes');
-  list.innerHTML = '';
-  const notes = await fetchJSON('/notes/');
-  for (const n of notes) {
-    const li = document.createElement('li');
-    li.textContent = `${n.title}: ${n.content}`;
-    list.appendChild(li);
+function renderNotes(notes) {
+  const ul = document.getElementById('notes');
+  ul.innerHTML = '';
+  if (notes.length === 0) {
+    ul.innerHTML = '<li>No results found</li>';
+    return;
   }
+  notes.forEach(note => {
+    const li = document.createElement('li');
+    li.textContent = `${note.title}: ${note.content}`;
+    ul.appendChild(li);
+  });
+}
+
+async function loadNotes() {
+  const notes = await fetchJSON('/notes/');
+  renderNotes(notes);
+}
+
+async function searchNotes(query) {
+  const notes = await fetchJSON(`/notes/search/?q=${encodeURIComponent(query)}`);
+  renderNotes(notes);
 }
 
 async function loadActions() {
@@ -59,6 +72,27 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     e.target.reset();
     loadActions();
+  });
+
+  document.getElementById('search-btn').addEventListener('click', async () => {
+    const query = document.getElementById('note-search').value;
+    if (query.trim()) {
+      await searchNotes(query);
+    }
+  });
+
+  document.getElementById('clear-search-btn').addEventListener('click', async () => {
+    document.getElementById('note-search').value = '';
+    await loadNotes();
+  });
+
+  document.getElementById('note-search').addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      const query = document.getElementById('note-search').value;
+      if (query.trim()) {
+        await searchNotes(query);
+      }
+    }
   });
 
   loadNotes();
