@@ -4,49 +4,30 @@ This is a minimal full-stack FastAPI + SQLite application designed as a "develop
 
 ## Environment Setup
 
-### Prerequisites
-- **Python environment**: This project requires the `cs146s` conda environment
-- **Conda path**: `/opt/miniconda3`
-- **Environment path**: `/opt/miniconda3/envs/cs146s`
+**IMPORTANT**: All commands must be run from the `week4/` directory.
 
-### Activating the Environment
+- **Conda environment**: `cs146s` (path: `/opt/miniconda3/envs/cs146s`)
+- **Dependency management**: Poetry (`pyproject.toml` in parent directory)
 
-**For interactive shell (zsh/bash terminal):**
+### Running Commands
+
+所有命令统一格式：
 ```bash
-conda activate cs146s
+/opt/miniconda3/bin/conda run -n cs146s poetry run <command>
 ```
 
-**For non-interactive shell (Claude Code / AI agents):**
-Use `conda run` to execute commands without activating the environment:
+示例：
 ```bash
-/opt/miniconda3/bin/conda run -n cs146s <command>
+/opt/miniconda3/bin/conda run -n cs146s poetry run make test
+/opt/miniconda3/bin/conda run -n cs146s poetry run make run
+/opt/miniconda3/bin/conda run -n cs146s poetry run make format
+/opt/miniconda3/bin/conda run -n cs146s poetry run make lint
+/opt/miniconda3/bin/conda run -n cs146s poetry run pre-commit run --all-files
 ```
 
-Examples:
-```bash
-/opt/miniconda3/bin/conda run -n cs146s pre-commit run --all-files
-/opt/miniconda3/bin/conda run -n cs146s pytest
-/opt/miniconda3/bin/conda run -n cs146s make test
-```
-
-### Initial Setup Steps
-1. Activate the conda environment (see above)
-
-2. (Optional but recommended) Install pre-commit hooks:
-   ```bash
-   # Interactive shell
-   pre-commit install
-
-   # Non-interactive shell (Claude Code)
-   /opt/miniconda3/bin/conda run -n cs146s pre-commit install
-   ```
-
-3. Verify setup by running the app:
-   ```bash
-   make run
-   ```
-
-4. Open http://localhost:8000 for the frontend and http://localhost:8000/docs for API docs
+### Initial Setup
+1. (Optional) Install pre-commit: `/opt/miniconda3/bin/conda run -n cs146s poetry run pre-commit install`
+2. Verify: `/opt/miniconda3/bin/conda run -n cs146s poetry run make run` → http://localhost:8000
 
 ## Project Structure
 
@@ -76,11 +57,9 @@ docs/
 
 ## Quick Start
 
-**IMPORTANT**: All commands must be run from the `week4/` directory with the `cs146s` conda environment activated.
-
 ### Running the Application
 ```bash
-make run          # Start server at http://localhost:8000
+/opt/miniconda3/bin/conda run -n cs146s poetry run make run
 ```
 - Frontend: http://localhost:8000
 - API docs: http://localhost:8000/docs
@@ -88,13 +67,13 @@ make run          # Start server at http://localhost:8000
 
 ### Testing
 ```bash
-make test         # Run pytest suite
+/opt/miniconda3/bin/conda run -n cs146s poetry run make test
 ```
 
 ### Code Quality
 ```bash
-make format       # Auto-format with black + ruff --fix
-make lint         # Check with ruff (no changes)
+/opt/miniconda3/bin/conda run -n cs146s poetry run make format  # Auto-format with black + ruff --fix
+/opt/miniconda3/bin/conda run -n cs146s poetry run make lint    # Check with ruff (no changes)
 ```
 
 ### Database
@@ -102,7 +81,7 @@ The database is automatically created and seeded on startup (see `backend/app/db
 
 To manually re-seed:
 ```bash
-make seed
+/opt/miniconda3/bin/conda run -n cs146s poetry run make seed
 ```
 
 ## Code Style and Safety Guardrails
@@ -114,31 +93,33 @@ make seed
 - **Tests**: pytest with simple assertions
 
 ### Safe Commands
-- `make run` - Start the dev server (sets PYTHONPATH automatically)
-- `make test` - Run all tests (sets PYTHONPATH automatically)
-- `make format` - Auto-format code
-- `make lint` - Check code quality
-- `make seed` - Re-apply database seed
+
+所有命令统一使用 `/opt/miniconda3/bin/conda run -n cs146s poetry run <command>` 格式：
+
+- `poetry run make run` - Start the dev server (sets PYTHONPATH automatically)
+- `poetry run make test` - Run all tests (sets PYTHONPATH automatically)
+- `poetry run make seed` - Re-apply database seed
+- `poetry run make format` - Auto-format code with black + ruff
+- `poetry run make lint` - Check code quality with ruff
+- `poetry run pre-commit install` - Install git hooks
+- `poetry run pre-commit run --all-files` - Run all pre-commit hooks
 
 ### Commands to Avoid
 - Direct database mutations outside of `seed.sql` or migration scripts
 - Manual editing of auto-generated files
-- Running `uvicorn` directly without PYTHONPATH (use `make run` instead)
-- Running pytest without PYTHONPATH (use `make test` instead)
-
-### Gates Before Committing
-1. Run `make format` to ensure code is formatted
-2. Run `make lint` to check for issues
-3. Run `make test` to ensure tests pass
-4. (Optional) Run `pre-commit run --all-files` if hooks are installed
+- Running commands that import project code without `poetry run` (e.g., pytest, uvicorn directly)
+- Running `uvicorn` directly without PYTHONPATH (use `poetry run make run` instead)
+- Running pytest directly without PYTHONPATH (use `poetry run make test` instead)
 
 ## Development Workflows
+
+通用模式：**做 → 验证 → 修复 → 重复**，直到 test + lint 全部通过。
 
 ### Adding a New API Endpoint
 1. **Write a failing test first** in `backend/tests/test_<module>.py`
 2. **Implement the route** in appropriate router (`backend/app/routers/`)
 3. **Add/update schemas** in `backend/app/schemas.py` if needed
-4. **Run tests** with `make test` to verify
+4. **Run tests** with `poetry run make test` to verify
 5. **Run linter** with `make lint` to check code quality
 6. **Update docs** if you're tracking API changes (see docs/TASKS.md #7)
 
@@ -146,7 +127,7 @@ make seed
 1. **Update seed.sql** in `data/seed.sql` with new schema
 2. **Update models.py** with corresponding SQLAlchemy models
 3. **Delete dev.db** to force recreation: `rm data/dev.db`
-4. **Restart the app** with `make run`
+4. **Restart the app** with `poetry run make run`
 5. **Update tests** to reflect schema changes
 
 ### Adding Frontend Features
@@ -156,7 +137,7 @@ make seed
 4. **Add backend tests** for any new API interactions
 
 ### Refactoring a Module
-1. **Run tests first** to establish baseline (`make test`)
+1. **Run tests first** to establish baseline (`poetry run make test`)
 2. **Make the refactor** (rename, restructure, etc.)
 3. **Update imports** across the codebase
 4. **Run tests again** to ensure nothing broke
@@ -180,25 +161,17 @@ make seed
 - `backend/tests/test_action_items.py` - Action items tests
 - `backend/tests/test_extract.py` - Extract service tests
 
-## Practice Tasks
-
-See `docs/TASKS.md` for 7 practice tasks designed for agent-driven workflows:
-1. Enable pre-commit and fix the repo
-2. Add search endpoint for notes
-3. Complete action item flow
-4. Improve extraction logic
-5. Notes CRUD enhancements
-6. Request validation and error handling
-7. Docs drift check
-
 ## Tips for Working with This Repo
 
-- **Conda environment**: Use `conda activate cs146s` (interactive) or `/opt/miniconda3/bin/conda run -n cs146s <command>` (non-interactive/AI agents)
+- **Always use poetry run**: All commands must be run through `poetry run`. Dependencies are managed by Poetry and won't be available otherwise
+- **Conda environment**: Use `/opt/miniconda3/bin/conda run -n cs146s poetry run <command>`
 - **Use make commands**: They set up PYTHONPATH and other environment variables correctly
 - **Context is key**: Always read existing code before modifying
 - **Test-driven**: Write tests first when adding new features
 - **Keep it simple**: This is a minimal app - don't over-engineer
 - **Check the docs**: API documentation at `/docs` is auto-generated and always up-to-date
+- **Embrace iteration**: Development is rarely linear. Expect to run test → fix → test cycles multiple times
+- **Verify at each step**: After making changes, always run the full validation pipeline: `poetry run make test` → `poetry run make format` → `poetry run make lint`
 
 ## Custom Slash Commands
 
