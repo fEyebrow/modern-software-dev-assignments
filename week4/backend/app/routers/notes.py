@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -32,7 +32,12 @@ def search_notes(q: Optional[str] = None, db: Session = Depends(get_db)) -> list
         rows = db.execute(select(Note)).scalars().all()
     else:
         rows = (
-            db.execute(select(Note).where((Note.title.contains(q)) | (Note.content.contains(q))))
+            db.execute(
+                select(Note).where(
+                    (func.lower(Note.title).contains(q.lower()))
+                    | (func.lower(Note.content).contains(q.lower()))
+                )
+            )
             .scalars()
             .all()
         )
