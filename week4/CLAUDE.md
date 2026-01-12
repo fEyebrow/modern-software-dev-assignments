@@ -113,7 +113,40 @@ To manually re-seed:
 
 ## Development Workflows
 
-通用模式：**做 → 验证 → 修复 → 重复**，直到 test + lint 全部通过。
+通用模式（TDD）：
+
+```
+                              ┌───────────────────┐
+                              │ 文件 > 500 行?    │
+                              │ Yes: Refactor     │
+                              │ No:  跳过         │
+                              └───────────────────┘
+                                       │
+  Red ──────────→ Green ──────────→ Refactor? ─────────→ Lint ──────→ Commit
+   │                │                   │                  │
+   ▼                ▼                   ▼                  ▼
+  写失败        ┌──────┐            ┌──────┐           ┌──────┐
+  的测试        │ 运行 │←───┐       │ 运行 │←───┐      │ 运行 │←───┐
+                │ 测试 │    │       │ 测试 │    │      │ lint │    │
+                └──┬───┘    │       └──┬───┘    │      └──┬───┘    │
+                   │        │          │        │         │        │
+              ┌────┴────┐   │     ┌────┴────┐   │    ┌────┴────┐   │
+              ▼         ▼   │     ▼         ▼   │    ▼         ▼   │
+            通过      失败   │   通过      失败    │   通过      失败  │
+              │         │   │     │         │   │     │         │  │
+              │         ▼   │     │         ▼   │     │         ▼  │
+              │       修复──┘     │       修复──┘     │       修复─┘
+              │                   │                   │
+              ▼                   ▼                   ▼
+           下一步              下一步               Commit
+```
+
+核心循环：
+1. **Red**: 写一个失败的测试
+2. **Green**: 写最少的代码让测试通过（测试失败 → 修复 → 重跑，直到通过）
+3. **Refactor**（可选）: 单个文件 > 500 行时考虑重构（测试失败 → 修复 → 重跑，直到通过）
+4. **Lint**: 运行 lint（失败 → 修复 → 重跑，直到通过）
+5. **Commit**: 全部通过后提交
 
 ### Adding a New API Endpoint
 1. **Write a failing test first** in `backend/tests/test_<module>.py`
@@ -121,28 +154,31 @@ To manually re-seed:
 3. **Add/update schemas** in `backend/app/schemas.py` if needed
 4. **Run tests** with `poetry run make test` to verify
 5. **Run linter** with `make lint` to check code quality
-6. **Update docs** if you're tracking API changes (see docs/TASKS.md #7)
+6. **Commit** changes with descriptive message
 
 ### Modifying Database Schema
-1. **Update seed.sql** in `data/seed.sql` with new schema
-2. **Update models.py** with corresponding SQLAlchemy models
-3. **Delete dev.db** to force recreation: `rm data/dev.db`
-4. **Restart the app** with `poetry run make run`
-5. **Update tests** to reflect schema changes
+1. **Write a failing test first** for the feature that needs the schema change
+2. **Update seed.sql** in `data/seed.sql` with new schema
+3. **Update models.py** with corresponding SQLAlchemy models
+4. **Update schemas.py** if API input/output changes
+5. **Migrate the database**: 用 `sqlite3 data/dev.db` 执行 ALTER TABLE 语句
+6. **Implement the feature** (routes, services, etc.)
+7. **Run tests** with `poetry run make test` to verify
+8. **Run format + lint**, fix issues if any
+9. **Commit** changes with descriptive message
 
 ### Adding Frontend Features
 1. **Update `frontend/app.js`** with new logic
 2. **Update `frontend/index.html`** if UI changes needed
-3. **Test manually** at http://localhost:8000
-4. **Add backend tests** for any new API interactions
+
 
 ### Refactoring a Module
 1. **Run tests first** to establish baseline (`poetry run make test`)
 2. **Make the refactor** (rename, restructure, etc.)
 3. **Update imports** across the codebase
 4. **Run tests again** to ensure nothing broke
-5. **Run lint** with `make lint` and fix any issues
-6. **Format code** with `make format`
+5. **Run format + lint** with `make format` then `make lint`, fix any issues
+6. **Commit** changes with descriptive message
 
 ## Key Files and Entry Points
 
