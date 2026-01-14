@@ -38,3 +38,21 @@ def test_delete_action_item_success(client):
 def test_delete_action_item_not_found(client):
     r = client.delete("/action-items/99999")
     assert r.status_code == 404
+
+
+def test_create_action_item_empty_description(client):
+    payload = {"description": ""}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_action_item_whitespace_only_description(client):
+    payload = {"description": "   "}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_action_item_description_too_long(client):
+    payload = {"description": "a" * 501}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 422

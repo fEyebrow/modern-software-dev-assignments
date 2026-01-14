@@ -39,3 +39,33 @@ def test_delete_note_success(client):
 def test_delete_note_not_found(client):
     r = client.delete("/notes/99999")
     assert r.status_code == 404
+
+
+def test_create_note_empty_title(client):
+    payload = {"title": "", "content": "Some content"}
+    r = client.post("/notes/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_note_whitespace_only_title(client):
+    payload = {"title": "   ", "content": "Some content"}
+    r = client.post("/notes/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_note_title_too_long(client):
+    payload = {"title": "a" * 201, "content": "Some content"}
+    r = client.post("/notes/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_note_empty_content(client):
+    payload = {"title": "Title", "content": ""}
+    r = client.post("/notes/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_note_content_too_long(client):
+    payload = {"title": "Title", "content": "a" * 10001}
+    r = client.post("/notes/", json=payload)
+    assert r.status_code == 422
