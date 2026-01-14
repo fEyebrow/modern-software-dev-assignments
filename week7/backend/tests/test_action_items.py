@@ -20,3 +20,51 @@ def test_create_complete_list_and_patch_action_item(client):
     assert r.status_code == 200
     patched = r.json()
     assert patched["description"] == "Updated"
+
+
+def test_delete_action_item_success(client):
+    payload = {"description": "To be deleted"}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 201, r.text
+    item_id = r.json()["id"]
+
+    r = client.delete(f"/action-items/{item_id}")
+    assert r.status_code == 204
+
+    r = client.get(f"/action-items/{item_id}")
+    assert r.status_code == 404
+
+
+def test_delete_action_item_not_found(client):
+    r = client.delete("/action-items/99999")
+    assert r.status_code == 404
+
+
+def test_create_action_item_empty_description(client):
+    payload = {"description": ""}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_action_item_whitespace_only_description(client):
+    payload = {"description": "   "}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 422
+
+
+def test_create_action_item_description_too_long(client):
+    payload = {"description": "a" * 501}
+    r = client.post("/action-items/", json=payload)
+    assert r.status_code == 422
+
+
+def test_list_action_items_invalid_sort_field(client):
+    r = client.get("/action-items/", params={"sort": "invalid_field"})
+    assert r.status_code == 400
+    assert "Invalid sort field" in r.json()["detail"]
+
+
+def test_list_action_items_invalid_sort_field_with_prefix(client):
+    r = client.get("/action-items/", params={"sort": "-invalid_field"})
+    assert r.status_code == 400
+    assert "Invalid sort field" in r.json()["detail"]

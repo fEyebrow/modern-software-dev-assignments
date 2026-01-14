@@ -1,20 +1,22 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import asc, desc, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import Note
 from ..schemas import NoteCreate, NotePatch, NoteRead
+from ..utils import parse_sort_param
 
 router = APIRouter(prefix="/notes", tags=["notes"])
+
+
+ALLOWED_SORT_FIELDS = {"id", "title", "content", "created_at", "updated_at"}
 
 
 @router.get("/", response_model=list[NoteRead])
 def list_notes(
     db: Session = Depends(get_db),
-    q: Optional[str] = None,
+    q: str | None = None,
     skip: int = 0,
     limit: int = Query(50, le=200),
     sort: str = Query("-created_at", description="Sort by field, prefix with - for desc"),
@@ -23,13 +25,7 @@ def list_notes(
     if q:
         stmt = stmt.where((Note.title.contains(q)) | (Note.content.contains(q)))
 
-    sort_field = sort.lstrip("-")
-    order_fn = desc if sort.startswith("-") else asc
-    if hasattr(Note, sort_field):
-        stmt = stmt.order_by(order_fn(getattr(Note, sort_field)))
-    else:
-        stmt = stmt.order_by(desc(Note.created_at))
-
+    stmt = stmt.order_by(parse_sort_param(sort, Note, ALLOWED_SORT_FIELDS))
     rows = db.execute(stmt.offset(skip).limit(limit)).scalars().all()
     return [NoteRead.model_validate(row) for row in rows]
 
@@ -64,3 +60,12 @@ def get_note(note_id: int, db: Session = Depends(get_db)) -> NoteRead:
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
     return NoteRead.model_validate(note)
+
+
+@router.delete("/{note_id}", status_code=204)
+def delete_note(note_id: int, db: Session = Depends(get_db)) -> None:
+    note = db.get(Note, note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    db.delete(note)
+    db.flush()
