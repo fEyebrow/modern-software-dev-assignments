@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import asc, desc, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import ActionItem
 from ..schemas import ActionItemCreate, ActionItemPatch, ActionItemRead
+from ..utils import parse_sort_param
 
 router = APIRouter(prefix="/action-items", tags=["action_items"])
+
+
+ALLOWED_SORT_FIELDS = {"id", "description", "completed", "created_at", "updated_at"}
 
 
 @router.get("/", response_model=list[ActionItemRead])
@@ -21,13 +25,7 @@ def list_items(
     if completed is not None:
         stmt = stmt.where(ActionItem.completed.is_(completed))
 
-    sort_field = sort.lstrip("-")
-    order_fn = desc if sort.startswith("-") else asc
-    if hasattr(ActionItem, sort_field):
-        stmt = stmt.order_by(order_fn(getattr(ActionItem, sort_field)))
-    else:
-        stmt = stmt.order_by(desc(ActionItem.created_at))
-
+    stmt = stmt.order_by(parse_sort_param(sort, ActionItem, ALLOWED_SORT_FIELDS))
     rows = db.execute(stmt.offset(skip).limit(limit)).scalars().all()
     return [ActionItemRead.model_validate(row) for row in rows]
 

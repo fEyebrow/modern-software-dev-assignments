@@ -56,3 +56,15 @@ def test_create_action_item_description_too_long(client):
     payload = {"description": "a" * 501}
     r = client.post("/action-items/", json=payload)
     assert r.status_code == 422
+
+
+def test_list_action_items_invalid_sort_field(client):
+    r = client.get("/action-items/", params={"sort": "invalid_field"})
+    assert r.status_code == 400
+    assert "Invalid sort field" in r.json()["detail"]
+
+
+def test_list_action_items_invalid_sort_field_with_prefix(client):
+    r = client.get("/action-items/", params={"sort": "-invalid_field"})
+    assert r.status_code == 400
+    assert "Invalid sort field" in r.json()["detail"]
